@@ -11,6 +11,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Cosas_Sergio/Scenes_Sergio/ServerTestScene.unity
     guid: 907bdab138388ec4fa8a7c1ccd567204
+  - enabled: 1
+    path: Assets/Scenes/Tests/PlayerMovement.unity
+    guid: 4ef035beea19fd04e8cc48a3cf3bacac
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0
