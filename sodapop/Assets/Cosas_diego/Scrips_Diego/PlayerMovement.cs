@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public class PlayerMovement : NetworkBehaviour
@@ -14,6 +13,7 @@ public class PlayerMovement : NetworkBehaviour
 
     [Header("Settings")]
     [SerializeField] private float movementSpeed = 5f;
+    [SerializeField] private float sprintMultiplier = 2f;
     [SerializeField] private float gravity = -9.81f;
     [SerializeField] private float jumpHeight = 2f;
     private float rotationSmoothVelocity;
@@ -22,6 +22,7 @@ public class PlayerMovement : NetworkBehaviour
     private Vector3 previousMovementInput;
     private Vector3 verticalVelocity;
     private bool isGrounded;
+    private bool isSprinting = false;
 
     private void Awake()
     {
@@ -31,10 +32,11 @@ public class PlayerMovement : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
-        if (!IsOwner) { return; }
+        if (!IsOwner) return;
 
         inputReader.OnMoveEvent += HandleMovement;
         inputReader.OnJumpEvent += HandleJump;
+        inputReader.OnSprintEvent += HandleSprint;
 
         _mTransform = transform;
         mainCamera = Camera.main.transform;
@@ -42,16 +44,19 @@ public class PlayerMovement : NetworkBehaviour
 
     public override void OnNetworkDespawn()
     {
-        if (!IsOwner) { return; }
+        if (!IsOwner) return;
 
         if (inputReader != null)
+        {
             inputReader.OnMoveEvent -= HandleMovement;
             inputReader.OnJumpEvent -= HandleJump;
+            inputReader.OnSprintEvent -= HandleSprint;
+        }
     }
 
     private void Update()
     {
-        if (!IsOwner) { return; }
+        if (!IsOwner) return;
 
         Movement();
     }
@@ -61,25 +66,26 @@ public class PlayerMovement : NetworkBehaviour
         previousMovementInput = movementInput;
     }
 
-        private void HandleJump()
+    private void HandleJump()
     {
         if (isGrounded)
         {
-            // Fórmula física para salto (v = sqrt(2 * h * -g))
             verticalVelocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
         }
     }
 
+    private void HandleSprint(bool sprinting)
+    {
+        isSprinting = sprinting;
+    }
+
     private void Movement()
     {
-        // Detectar si está en el suelo
         isGrounded = characterController.isGrounded;
 
-        // Resetear velocidad vertical si está en el suelo
         if (isGrounded && verticalVelocity.y < 0)
             verticalVelocity.y = -2f;
 
-        // Movimiento horizontal
         float x = previousMovementInput.x;
         float z = previousMovementInput.z;
 
@@ -87,18 +93,16 @@ public class PlayerMovement : NetworkBehaviour
 
         if (direction.magnitude >= .1f)
         {
-            float targeAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + mainCamera.eulerAngles.y;
-            float angle = Mathf.SmoothDampAngle(_mTransform.eulerAngles.y, targeAngle, ref rotationSmoothVelocity, rotationSmoothTime);
+            float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + mainCamera.eulerAngles.y;
+            float angle = Mathf.SmoothDampAngle(_mTransform.eulerAngles.y, targetAngle, ref rotationSmoothVelocity, rotationSmoothTime);
             _mTransform.rotation = Quaternion.Euler(0f, angle, 0f);
 
-            Vector3 moveDirection = Quaternion.Euler(0f, targeAngle, 0f) * Vector3.forward;
-            characterController.Move(moveDirection * (movementSpeed * Time.deltaTime));
+            Vector3 moveDirection = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
+            float currentSpeed = isSprinting ? movementSpeed * sprintMultiplier : movementSpeed;
+            characterController.Move(moveDirection * (currentSpeed * Time.deltaTime));
         }
 
-        // Aplicar gravedad
         verticalVelocity.y += gravity * Time.deltaTime;
-
-        // Mover en Y
         characterController.Move(verticalVelocity * Time.deltaTime);
     }
 }
