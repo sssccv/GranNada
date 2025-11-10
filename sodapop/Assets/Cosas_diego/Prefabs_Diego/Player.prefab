@@ -234,6 +234,7 @@ MonoBehaviour:
   inputReader: {fileID: 11400000, guid: 3f92bb43283f74b4bbacbd5565948546, type: 2}
   characterController: {fileID: 7486404837499988097}
   movementSpeed: 10
+  sprintMultiplier: 2
   gravity: -9.81
   jumpHeight: 2
 --- !u!114 &4904747663645930214

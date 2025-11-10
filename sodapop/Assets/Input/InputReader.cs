@@ -14,6 +14,7 @@ public class InputReader : ScriptableObject, IPlayerActions
     public event Action<bool> OnFireEvent;
     public event Action OnJumpEvent;
     public event Action<Vector3> OnMoveEvent;
+    public event Action<bool> OnSprintEvent;
     #endregion
 
     private void OnEnable()
@@ -55,4 +56,13 @@ public class InputReader : ScriptableObject, IPlayerActions
             OnJumpEvent?.Invoke();
         }
     }
+
+    public void OnSprint(InputAction.CallbackContext context)
+    {
+        if (context.performed)
+            OnSprintEvent?.Invoke(true);
+        else if (context.canceled)
+            OnSprintEvent?.Invoke(false);
+    }
+
 }
