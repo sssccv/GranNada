@@ -6,7 +6,7 @@ public class PlayerShooter : MonoBehaviour
     [Header("References")]
     public InputReader inputReader;
     public Transform firePoint;
-    public GameObject bulletPrefab;
+    public GameObject[] grenadePrefabs;
 
     [Header("Settings")]
     public float shootForce = 10f;          // Fuerza horizontal principal
@@ -42,15 +42,16 @@ public class PlayerShooter : MonoBehaviour
 
     private void Shoot()
     {
-        if (bulletPrefab == null || firePoint == null)
+        if (firePoint == null || grenadePrefabs == null || grenadePrefabs.Length == 0)
         {
-            Debug.LogWarning("Faltan referencias en PlayerShooter");
+            Debug.LogWarning("Faltan referencias o no hay prefabs en PlayerShooter");
             return;
         }
 
-        GameObject bullet = Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
+        GameObject selectedPrefab = grenadePrefabs[UnityEngine.Random.Range(0, grenadePrefabs.Length)];
+        GameObject grenade = Instantiate(selectedPrefab, firePoint.position, firePoint.rotation);
 
-        Rigidbody rb = bullet.GetComponent<Rigidbody>();
+        Rigidbody rb = grenade.GetComponent<Rigidbody>();
         if (rb != null)
         {
             // Direcciones
