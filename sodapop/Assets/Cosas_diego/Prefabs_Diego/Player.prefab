@@ -251,7 +251,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerShooter
   inputReader: {fileID: 11400000, guid: 3f92bb43283f74b4bbacbd5565948546, type: 2}
   firePoint: {fileID: 7471081090950341724}
-  bulletPrefab: {fileID: 750382361886165863, guid: 8645d8a1ef6f0904184297ba85e98fd9, type: 3}
+  grenadePrefabs:
+  - {fileID: 750382361886165863, guid: 8645d8a1ef6f0904184297ba85e98fd9, type: 3}
+  - {fileID: 750382361886165863, guid: 2ad13259ffa713f419a550d651db1979, type: 3}
+  - {fileID: 750382361886165863, guid: ac756c13a18dd714db6b74001274a985, type: 3}
+  - {fileID: 750382361886165863, guid: 3ff31f4538d57db4cb4e9b28fb0797e3, type: 3}
+  - {fileID: 750382361886165863, guid: 20b845299c461a94c897c94a8bbe0f73, type: 3}
   shootForce: 10
   upwardForce: 5
   fireRate: 2
