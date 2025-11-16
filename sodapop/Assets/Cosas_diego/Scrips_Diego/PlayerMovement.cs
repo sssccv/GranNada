@@ -12,10 +12,10 @@ public class PlayerMovement : NetworkBehaviour
     private Transform mainCamera;
 
     [Header("Settings")]
-    [SerializeField] private float movementSpeed = 5f;
-    [SerializeField] private float sprintMultiplier = 2f;
+    [SerializeField] public float movementSpeed = 5f;
+    [SerializeField] public float sprintMultiplier = 2f;
     [SerializeField] private float gravity = -9.81f;
-    [SerializeField] private float jumpHeight = 2f;
+    [SerializeField] public float jumpHeight = 2f;
     private float rotationSmoothVelocity;
     private float rotationSmoothTime = .1f;
 
