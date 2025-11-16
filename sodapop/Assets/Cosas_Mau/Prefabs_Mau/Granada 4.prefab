@@ -126,7 +126,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Bullet
   lifetime: 3
-  explosionEffect: {fileID: 1000010844420130, guid: 4edabb1c0dde62743b137378c7d22980, type: 3}
+  explosionEffect: {fileID: 8172849020266659018, guid: 2af5562ce69fc2d448481a1587a352a5, type: 3}
 --- !u!54 &3361578626834249809
 Rigidbody:
   m_ObjectHideFlags: 0
