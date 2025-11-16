@@ -154,7 +154,7 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   damage: 20
   lifetime: 3
-  explosionEffect: {fileID: 1000010844420130, guid: 4edabb1c0dde62743b137378c7d22980, type: 3}
+  explosionEffect: {fileID: 4425129568585013132, guid: bbeeb0ddc21369746aaaae5c5c1c09cf, type: 3}
 --- !u!54 &3361578626834249809
 Rigidbody:
   m_ObjectHideFlags: 0

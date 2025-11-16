@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using Unity.Netcode;
 
@@ -6,25 +7,15 @@ public class PlayerShooter : NetworkBehaviour
     [Header("References")]
     public InputReader inputReader;
     public Transform firePoint;
-    public GameObject[] grenadePrefabs;
+    public GameObject[] grenadePrefabs; // aquí agregas todas tus variantes de granadas
 
     [Header("Settings")]
-    public float shootForce = 10f;
-    public float upwardForce = 5f;
+    public float shootForce = 10f;          // Fuerza horizontal principal
+    public float upwardForce = 5f;          // Fuerza vertical para crear la parábola
     public float fireRate = 0.5f;
-    public int projectileDamage = 20;
 
     private bool isFiring;
     private float lastFireTime;
-
-    private ulong attackerId;
-
-    private void Awake()
-    {
-        // Esto solo funciona después del spawn en Netcode.
-        var netObj = GetComponent<NetworkObject>();
-        attackerId = netObj != null ? netObj.OwnerClientId : ulong.MaxValue;
-    }
 
     private void OnEnable()
     {
@@ -43,48 +34,39 @@ public class PlayerShooter : NetworkBehaviour
 
     private void Update()
     {
-        if (!IsOwner) return;
+        if (!IsOwner) return; // Solo el jugador dueño puede disparar
 
         if (isFiring && Time.time - lastFireTime > fireRate)
         {
-            ShootServerRpc();
+            ShootServerRpc(); // Pedimos al servidor que dispare
             lastFireTime = Time.time;
         }
     }
 
-    // ----- RPC PARA DISPARAR -----
     [ServerRpc]
     private void ShootServerRpc()
     {
-        Shoot();
-    }
-
-    private void Shoot()
-    {
         if (firePoint == null || grenadePrefabs == null || grenadePrefabs.Length == 0)
         {
-            Debug.LogWarning("Faltan referencias en PlayerShooter");
+            Debug.LogWarning("Faltan referencias o no hay prefabs en PlayerShooter");
             return;
         }
 
-        GameObject prefab = grenadePrefabs[Random.Range(0, grenadePrefabs.Length)];
-        GameObject proj = Instantiate(prefab, firePoint.position, firePoint.rotation);
+        // Selecciona una granada aleatoria del array
+        GameObject selectedPrefab = grenadePrefabs[UnityEngine.Random.Range(0, grenadePrefabs.Length)];
 
-        // Spawn en red
-        proj.GetComponent<NetworkObject>().Spawn(true);
+        // Instancia la granada en el servidor
+        GameObject grenade = Instantiate(selectedPrefab, firePoint.position, firePoint.rotation);
 
-        // Inicializar daño + atacante
-        if (proj.TryGetComponent<Bullet>(out Bullet bullet))
-        {
-            bullet.Initialize(OwnerClientId, projectileDamage);
-        }
+        // MUY IMPORTANTE: Spawn en red
+        grenade.GetComponent<NetworkObject>().Spawn();
 
-        // Física
-        if (proj.TryGetComponent<Rigidbody>(out Rigidbody rb))
+        // Aplica fuerza para que la granada se mueva
+        Rigidbody rb = grenade.GetComponent<Rigidbody>();
+        if (rb != null)
         {
             Vector3 forward = firePoint.forward * shootForce;
             Vector3 upward = Vector3.up * upwardForce;
-
             rb.AddForce(forward + upward, ForceMode.Impulse);
         }
     }

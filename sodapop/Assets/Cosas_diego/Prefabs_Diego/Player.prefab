@@ -93,7 +93,7 @@ GameObject:
   - component: {fileID: 6163804406948291947}
   - component: {fileID: 4904747663645930214}
   - component: {fileID: 8763908425368174707}
-  - component: {fileID: 2045618962273609444}
+  - component: {fileID: 364546124724540805}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -331,15 +331,14 @@ MonoBehaviour:
   inputReader: {fileID: 11400000, guid: 3f92bb43283f74b4bbacbd5565948546, type: 2}
   firePoint: {fileID: 7471081090950341724}
   grenadePrefabs:
-  - {fileID: 750382361886165863, guid: 8645d8a1ef6f0904184297ba85e98fd9, type: 3}
-  - {fileID: 750382361886165863, guid: 2ad13259ffa713f419a550d651db1979, type: 3}
-  - {fileID: 750382361886165863, guid: ac756c13a18dd714db6b74001274a985, type: 3}
-  - {fileID: 750382361886165863, guid: 3ff31f4538d57db4cb4e9b28fb0797e3, type: 3}
-  - {fileID: 750382361886165863, guid: 20b845299c461a94c897c94a8bbe0f73, type: 3}
+  - {fileID: 6371802206121391458, guid: 11919633b62ff5243a8e0bd225a9d701, type: 3}
+  - {fileID: 6371802206121391458, guid: 64a6df2b53f6f8543baeb9f8732a4be8, type: 3}
+  - {fileID: 6371802206121391458, guid: 8f0adec86988d904b8d781b39b5300e2, type: 3}
+  - {fileID: 6371802206121391458, guid: 59edb992647436e478c455f054cb20a7, type: 3}
+  - {fileID: 6371802206121391458, guid: 818003cb45e1573418c614b6ceb0cb3d, type: 3}
   shootForce: 10
   upwardForce: 5
   fireRate: 2
-  projectileDamage: 20
 --- !u!114 &8763908425368174707
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -356,21 +355,33 @@ MonoBehaviour:
   <maxHealth>k__BackingField: 100
   currentHealth:
     m_InternalValue: 0
---- !u!114 &2045618962273609444
-MonoBehaviour:
+--- !u!54 &364546124724540805
+Rigidbody:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2098883754890550089}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4083c1f341ade3748b0fc49ef01bc512, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TeamComponent
-  ShowTopMostFoldoutHeaderGroup: 1
-  PlayerTeam:
-    m_InternalValue: 0
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!1 &4316901408669348098
 GameObject:
   m_ObjectHideFlags: 0
@@ -773,7 +784,7 @@ Transform:
   m_GameObject: {fileID: 7958532994371323162}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.162, z: 0.686}
+  m_LocalPosition: {x: 0, y: 0.162, z: 1.013}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
