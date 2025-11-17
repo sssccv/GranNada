@@ -13,6 +13,9 @@ public class TeamScoreManager : NetworkBehaviour
 
     public Action<Team> OnTeamWin;
 
+    public bool IsMatchOver = false;
+
+
     private void Awake()
     {
         Instance = this;
@@ -40,13 +43,20 @@ public class TeamScoreManager : NetworkBehaviour
 
     private void CheckWinCondition()
     {
-        if (TeamAScore.Value >= scoreToWin)
-        {
-            OnTeamWin?.Invoke(Team.TeamA);
-        }
-        else if (TeamBScore.Value >= scoreToWin)
-        {
-            OnTeamWin?.Invoke(Team.TeamB);
-        }
+    if (IsMatchOver) return;
+
+    if (TeamAScore.Value >= scoreToWin)
+    {
+        IsMatchOver = true;
+        OnTeamWin?.Invoke(Team.TeamA);
     }
+    else if (TeamBScore.Value >= scoreToWin)
+    {
+        IsMatchOver = true;
+        OnTeamWin?.Invoke(Team.TeamB);
+    }
+    }
+
 }
+
+
