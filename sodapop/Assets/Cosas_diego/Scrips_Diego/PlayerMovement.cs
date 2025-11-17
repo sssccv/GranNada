@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -16,67 +15,88 @@ public class PlayerMovement : NetworkBehaviour
     [SerializeField] public float sprintMultiplier = 2f;
     [SerializeField] private float gravity = -9.81f;
     [SerializeField] public float jumpHeight = 2f;
-    private float rotationSmoothVelocity;
-    private float rotationSmoothTime = .1f;
 
     private Vector3 previousMovementInput;
     private Vector3 verticalVelocity;
+    private float rotationSmoothVelocity;
+    private float rotationSmoothTime = .1f;
     private bool isGrounded;
     private bool isSprinting = false;
 
-    private void Awake()
-    {
-        if (characterController == null)
-            characterController = GetComponent<CharacterController>();
-    }
-
     public override void OnNetworkSpawn()
     {
-        if (!IsOwner) return;
-
-        inputReader.OnMoveEvent += HandleMovement;
-        inputReader.OnJumpEvent += HandleJump;
-        inputReader.OnSprintEvent += HandleSprint;
-
-        _mTransform = transform;
-        mainCamera = Camera.main.transform;
-    }
-
-    public override void OnNetworkDespawn()
-    {
-        if (!IsOwner) return;
-
-        if (inputReader != null)
+        // --- INPUT DEL JUGADOR ---
+        if (IsOwner)
         {
-            inputReader.OnMoveEvent -= HandleMovement;
-            inputReader.OnJumpEvent -= HandleJump;
-            inputReader.OnSprintEvent -= HandleSprint;
+            inputReader.OnMoveEvent += HandleMovement;
+            inputReader.OnJumpEvent += HandleJump;
+            inputReader.OnSprintEvent += HandleSprint;
+
+            _mTransform = transform;
+            mainCamera = Camera.main.transform;
+        }
+
+        // --- ASIGNAR PLAYERSPAWNER DESDE EL SERVIDOR ---
+        if (IsServer)
+        {
+            StartCoroutine(ServerAssignSpawnerRoutine());
         }
     }
+
+    private IEnumerator ServerAssignSpawnerRoutine()
+    {
+        yield return null; // aseguramos que la escena ya cargó
+
+        PlayerSpawner spawner = FindFirstObjectByType<PlayerSpawner>();
+
+        if (spawner == null)
+        {
+            Debug.LogError("❌ PlayerSpawner no encontrado en escena.");
+            yield break;
+        }
+
+        // Obtenemos el spawn correcto
+        Vector3 spawnPos = spawner.GetSpawnPoint(OwnerClientId);
+
+        // TELETRANSPORTAR DESDE EL SERVIDOR
+        transform.position = spawnPos;
+
+        // PASAR A CLIENTE SU SPAWNER PARA EL RESPAWN
+        AssignSpawnerClientRpc(OwnerClientId, spawnPos);
+    }
+
+    [ClientRpc]
+    private void AssignSpawnerClientRpc(ulong targetClient, Vector3 spawnPosition)
+    {
+        if (NetworkManager.Singleton.LocalClientId != targetClient)
+            return;
+
+        PlayerSpawner spawner = FindFirstObjectByType<PlayerSpawner>();
+        PlayerDeathHandler death = GetComponent<PlayerDeathHandler>();
+
+        if (death != null && spawner != null)
+        {
+            death.SetSpawner(spawner);
+            transform.position = spawnPosition;
+        }
+    }
+
+    // --- MOVIMIENTO ---
+    private void HandleMovement(Vector3 movementInput) => previousMovementInput = movementInput;
+
+    private void HandleJump()
+    {
+        if (isGrounded)
+            verticalVelocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+    }
+
+    private void HandleSprint(bool sprinting) => isSprinting = sprinting;
 
     private void Update()
     {
         if (!IsOwner) return;
 
         Movement();
-    }
-
-    private void HandleMovement(Vector3 movementInput)
-    {
-        previousMovementInput = movementInput;
-    }
-
-    private void HandleJump()
-    {
-        if (isGrounded)
-        {
-            verticalVelocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
-        }
-    }
-
-    private void HandleSprint(bool sprinting)
-    {
-        isSprinting = sprinting;
     }
 
     private void Movement()
@@ -95,10 +115,12 @@ public class PlayerMovement : NetworkBehaviour
         {
             float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + mainCamera.eulerAngles.y;
             float angle = Mathf.SmoothDampAngle(_mTransform.eulerAngles.y, targetAngle, ref rotationSmoothVelocity, rotationSmoothTime);
+
             _mTransform.rotation = Quaternion.Euler(0f, angle, 0f);
 
             Vector3 moveDirection = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
             float currentSpeed = isSprinting ? movementSpeed * sprintMultiplier : movementSpeed;
+
             characterController.Move(moveDirection * (currentSpeed * Time.deltaTime));
         }
 
@@ -106,3 +128,4 @@ public class PlayerMovement : NetworkBehaviour
         characterController.Move(verticalVelocity * Time.deltaTime);
     }
 }
+
