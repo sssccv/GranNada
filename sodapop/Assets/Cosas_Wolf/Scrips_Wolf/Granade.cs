@@ -33,15 +33,18 @@ public class Granade : NetworkBehaviour
             Instantiate(explosionEffect, transform.position, Quaternion.identity);
 
         // Spawnear zona de daño con attackerId
-        if (damageZonePrefab != null)
-        {
-            GameObject zone = Instantiate(damageZonePrefab, transform.position, Quaternion.identity);
+       if (damageZonePrefab != null)
+{
+    GameObject zone = Instantiate(damageZonePrefab, transform.position, Quaternion.identity);
 
-            var damageComp = zone.GetComponent<GranadeDamage>();
-            damageComp.Initialize(attackerId);
+    var damageComp = zone.GetComponent<GranadeDamage>();
+    if (damageComp != null)
+        damageComp.Initialize(attackerId);
+    else
+        Debug.LogError("❌ EL PREFAB damageZonePrefab NO TIENE 'GranadeDamage'");
 
-            zone.GetComponent<NetworkObject>().Spawn();
-        }
+    zone.GetComponent<NetworkObject>().Spawn();
+}
 
         GetComponent<NetworkObject>().Despawn();
     }

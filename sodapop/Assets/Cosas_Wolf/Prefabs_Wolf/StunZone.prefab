@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 7157322304140453093}
   - component: {fileID: 582454315734172478}
   - component: {fileID: 8010509568429219610}
+  - component: {fileID: -3724512918374092896}
   m_Layer: 0
   m_Name: StunZone
   m_TagString: Untagged
@@ -97,3 +98,19 @@ MonoBehaviour:
   reducedJumpMultiplier: 0.5
   stunDuration: 3
   lifetime: 2
+--- !u!114 &-3724512918374092896
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7116014815892203239}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 31b71241d6fa3304a9b7e8b4aae8a934, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GranadeDamage
+  ShowTopMostFoldoutHeaderGroup: 1
+  damagePerTick: 5
+  tickInterval: 1
+  lifetime: 3
