@@ -10,6 +10,13 @@ public class Mine : NetworkBehaviour
     public GameObject damageZonePrefab;
 
     private bool isArmed = false;
+    private ulong attackerId;
+
+    // Recibir el ID del jugador que la colocó
+    public void Initialize(ulong attacker)
+    {
+        attackerId = attacker;
+    }
 
     private void Start()
     {
@@ -23,7 +30,6 @@ public class Mine : NetworkBehaviour
     {
         if (!IsServer) return;
 
-        // Cuando toca el suelo, se queda fija
         if (!isArmed)
         {
             Rigidbody rb = GetComponent<Rigidbody>();
@@ -39,7 +45,6 @@ public class Mine : NetworkBehaviour
     {
         if (!IsServer || !isArmed) return;
 
-        // Detecta jugador por trigger
         if (other.GetComponent<PlayerMovement>() != null || other.GetComponent<Health>() != null)
         {
             Explode();
@@ -56,6 +61,12 @@ public class Mine : NetworkBehaviour
         if (damageZonePrefab != null)
         {
             GameObject zone = Instantiate(damageZonePrefab, transform.position, Quaternion.identity);
+
+            // PASAR EL ID DEL ATACANTE AL DAMAGEZONE SI LO NECESITAS
+            var dmg = zone.GetComponent<GranadeDamage>();
+            if (dmg != null)
+                dmg.Initialize(attackerId);
+
             zone.GetComponent<NetworkObject>().Spawn();
         }
 
@@ -65,9 +76,8 @@ public class Mine : NetworkBehaviour
     private IEnumerator DestroyAfterLifetime()
     {
         yield return new WaitForSeconds(lifetime);
+
         if (GetComponent<NetworkObject>() != null)
-        {
             GetComponent<NetworkObject>().Despawn();
-        }
     }
 }
