@@ -5,10 +5,10 @@ using Unity.Netcode;
 
 public class ServerButtons : MonoBehaviour
 {
-    [SerializeField] private GameObject panel;
-    [SerializeField] private GameObject button;
+    //[SerializeField] private GameObject panel;
+    //[SerializeField] private GameObject button;
 
-    private void Start()
+    /*private void Start()
     {
         panel.SetActive(false);
         button.SetActive(true);
@@ -24,21 +24,18 @@ public class ServerButtons : MonoBehaviour
     {
         panel.SetActive(false);
         button.SetActive(true);
-    }
+    }*/
 
     public void HostServer()
     {
         NetworkManager.Singleton.StartHost();
-        DeactivatePanel();
     }
     public void JoinServer()
     {
         NetworkManager.Singleton.StartClient();
-        DeactivatePanel();
     }
     public void CloseServer()
     {
         NetworkManager.Singleton.Shutdown();
-        DeactivatePanel();
     }
 }
