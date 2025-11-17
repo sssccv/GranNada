@@ -94,6 +94,7 @@ GameObject:
   - component: {fileID: 4904747663645930214}
   - component: {fileID: 8763908425368174707}
   - component: {fileID: 364546124724540805}
+  - component: {fileID: 8029958749617677274}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -382,6 +383,21 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &8029958749617677274
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2098883754890550089}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4083c1f341ade3748b0fc49ef01bc512, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TeamComponent
+  ShowTopMostFoldoutHeaderGroup: 1
+  PlayerTeam:
+    m_InternalValue: 0
 --- !u!1 &4316901408669348098
 GameObject:
   m_ObjectHideFlags: 0

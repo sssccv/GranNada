@@ -44,6 +44,37 @@ public class PlayerShooter : NetworkBehaviour
     }
 
     [ServerRpc]
+private void ShootServerRpc()
+{
+    if (firePoint == null || grenadePrefabs == null || grenadePrefabs.Length == 0)
+    {
+        Debug.LogWarning("Faltan referencias o no hay prefabs en PlayerShooter");
+        return;
+    }
+
+    GameObject selectedPrefab = grenadePrefabs[UnityEngine.Random.Range(0, grenadePrefabs.Length)];
+
+    GameObject grenade = Instantiate(selectedPrefab, firePoint.position, firePoint.rotation);
+
+    // Spawn en red
+    var netObj = grenade.GetComponent<NetworkObject>();
+    netObj.Spawn();
+
+    // PASAR EL ID DEL ATACANTE
+    grenade.GetComponent<Granade>().Initialize(OwnerClientId);
+
+    // Física
+    Rigidbody rb = grenade.GetComponent<Rigidbody>();
+    if (rb != null)
+    {
+        Vector3 forward = firePoint.forward * shootForce;
+        Vector3 upward = Vector3.up * upwardForce;
+
+        rb.AddForce(forward + upward, ForceMode.Impulse);
+    }
+}
+
+    /*[ServerRpc]
     private void ShootServerRpc()
     {
         if (firePoint == null || grenadePrefabs == null || grenadePrefabs.Length == 0)
@@ -69,5 +100,5 @@ public class PlayerShooter : NetworkBehaviour
             Vector3 upward = Vector3.up * upwardForce;
             rb.AddForce(forward + upward, ForceMode.Impulse);
         }
-    }
+    }*/
 }
