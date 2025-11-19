@@ -35,7 +35,7 @@ public class Mine : NetworkBehaviour
             Rigidbody rb = GetComponent<Rigidbody>();
             if (rb != null)
             {
-                rb.isKinematic = true;
+                rb.isKinematic = true; // se queda pegada
             }
             isArmed = true;
         }
@@ -53,16 +53,15 @@ public class Mine : NetworkBehaviour
 
     private void Explode()
     {
-        if (explosionEffect != null)
-        {
-            Instantiate(explosionEffect, transform.position, Quaternion.identity);
-        }
+        // Efecto visual sincronizado en todos los clientes
+        ExplodeClientRpc();
 
+        // Zona de daño en red (solo servidor)
         if (damageZonePrefab != null)
         {
             GameObject zone = Instantiate(damageZonePrefab, transform.position, Quaternion.identity);
 
-            // PASAR EL ID DEL ATACANTE AL DAMAGEZONE SI LO NECESITAS
+            // Pasar el ID del atacante al DamageZone si lo necesitas
             var dmg = zone.GetComponent<GranadeDamage>();
             if (dmg != null)
                 dmg.Initialize(attackerId);
@@ -70,7 +69,18 @@ public class Mine : NetworkBehaviour
             zone.GetComponent<NetworkObject>().Spawn();
         }
 
+        // Despawn en red
         GetComponent<NetworkObject>().Despawn();
+    }
+
+    [ClientRpc]
+    private void ExplodeClientRpc()
+    {
+        // Este código se ejecuta en todos los clientes
+        if (explosionEffect != null)
+        {
+            Instantiate(explosionEffect, transform.position, Quaternion.identity);
+        }
     }
 
     private IEnumerator DestroyAfterLifetime()

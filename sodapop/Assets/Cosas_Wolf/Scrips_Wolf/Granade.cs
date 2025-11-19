@@ -5,12 +5,14 @@ using UnityEngine;
 
 public class Granade : NetworkBehaviour
 {
+    [Header("Settings")]
     public float lifetime = 5f;
     public GameObject explosionEffect;
     public GameObject damageZonePrefab;
 
     private ulong attackerId;
 
+    // Recibir el ID del jugador que lanzó la granada
     public void Initialize(ulong attacker)
     {
         attackerId = attacker;
@@ -28,25 +30,41 @@ public class Granade : NetworkBehaviour
     {
         if (!IsServer) return;
 
-        // Efecto visual
-        if (explosionEffect != null)
-            Instantiate(explosionEffect, transform.position, Quaternion.identity);
+        Explode();
+    }
 
-        // Spawnear zona de daño con attackerId
-       if (damageZonePrefab != null)
-{
-    GameObject zone = Instantiate(damageZonePrefab, transform.position, Quaternion.identity);
+    private void Explode()
+    {
+        // Efecto visual sincronizado en todos los clientes
+        ExplodeClientRpc();
 
-    var damageComp = zone.GetComponent<GranadeDamage>();
-    if (damageComp != null)
-        damageComp.Initialize(attackerId);
-    else
-        Debug.LogError("❌ EL PREFAB damageZonePrefab NO TIENE 'GranadeDamage'");
+        // Zona de daño en red (solo servidor)
+        if (damageZonePrefab != null)
+        {
+            GameObject zone = Instantiate(damageZonePrefab, transform.position, Quaternion.identity);
 
-    zone.GetComponent<NetworkObject>().Spawn();
-}
+            // Pasar el ID del atacante al DamageZone
+            var damageComp = zone.GetComponent<GranadeDamage>();
+            if (damageComp != null)
+                damageComp.Initialize(attackerId);
+            else
+                Debug.LogError("❌ EL PREFAB damageZonePrefab NO TIENE 'GranadeDamage'");
 
+            zone.GetComponent<NetworkObject>().Spawn();
+        }
+
+        // Despawn en red
         GetComponent<NetworkObject>().Despawn();
+    }
+
+    [ClientRpc]
+    private void ExplodeClientRpc()
+    {
+        // Este código se ejecuta en todos los clientes
+        if (explosionEffect != null)
+        {
+            Instantiate(explosionEffect, transform.position, Quaternion.identity);
+        }
     }
 
     private IEnumerator DestroyAfterLifetime()
@@ -57,6 +75,7 @@ public class Granade : NetworkBehaviour
             GetComponent<NetworkObject>().Despawn();
     }
 }
+
 
 /*public class Granade : NetworkBehaviour
 {
