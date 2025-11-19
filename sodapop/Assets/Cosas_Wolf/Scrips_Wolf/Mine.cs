@@ -53,15 +53,14 @@ public class Mine : NetworkBehaviour
 
     private void Explode()
     {
-        // Efecto visual sincronizado en todos los clientes
-        ExplodeClientRpc();
+        //  Efecto visual sincronizado en todos los clientes con posición enviada
+        ExplodeClientRpc(transform.position);
 
-        // Zona de daño en red (solo servidor)
+        //  Zona de daño en red (solo servidor)
         if (damageZonePrefab != null)
         {
             GameObject zone = Instantiate(damageZonePrefab, transform.position, Quaternion.identity);
 
-            // Pasar el ID del atacante al DamageZone si lo necesitas
             var dmg = zone.GetComponent<GranadeDamage>();
             if (dmg != null)
                 dmg.Initialize(attackerId);
@@ -69,17 +68,17 @@ public class Mine : NetworkBehaviour
             zone.GetComponent<NetworkObject>().Spawn();
         }
 
-        // Despawn en red
+        //  Despawn en red
         GetComponent<NetworkObject>().Despawn();
     }
 
     [ClientRpc]
-    private void ExplodeClientRpc()
+    private void ExplodeClientRpc(Vector3 explosionPosition)
     {
-        // Este código se ejecuta en todos los clientes
+        // Este código se ejecuta en todos los clientes con la posición correcta
         if (explosionEffect != null)
         {
-            Instantiate(explosionEffect, transform.position, Quaternion.identity);
+            Instantiate(explosionEffect, explosionPosition, Quaternion.identity);
         }
     }
 
