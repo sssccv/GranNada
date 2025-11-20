@@ -127,5 +127,12 @@ public class PlayerMovement : NetworkBehaviour
         verticalVelocity.y += gravity * Time.deltaTime;
         characterController.Move(verticalVelocity * Time.deltaTime);
     }
+
+    public void ResetMovementState()
+{
+    previousMovementInput = Vector3.zero;
+    verticalVelocity = Vector3.zero;
+}
+
 }
 

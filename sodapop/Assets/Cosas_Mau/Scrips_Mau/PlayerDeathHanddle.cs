@@ -4,7 +4,6 @@ using UnityEngine;
 public class PlayerDeathHandler : NetworkBehaviour
 {
     [SerializeField] private float respawnDelay = 3f;
-    //[SerializeField] private Animator animator;
 
     private PlayerSpawner spawner;
 
@@ -40,7 +39,7 @@ public class PlayerDeathHandler : NetworkBehaviour
 
         isRespawning = true;
 
-        PlayDeathClientRpc();
+        PlayDeathClientRpc();  // SOLO desactiva movimiento/disparo
         StartCoroutine(RespawnRoutine());
     }
 
@@ -59,24 +58,28 @@ public class PlayerDeathHandler : NetworkBehaviour
     {
         if (spawner == null)
         {
-            Debug.LogError("Spawner no asignado");
+            Debug.LogError("❌ Spawner no asignado en PlayerDeathHandler.");
             return;
         }
 
+        // Restaurar salud
         health.currentHealth.Value = health.maxHealth;
 
+        // Obtener nueva posición de respawn
         Vector3 spawnPos = spawner.GetSpawnPoint(OwnerClientId);
+
+        // Teletransportar al jugador
         transform.position = spawnPos;
 
+        // Avisar al cliente para reactivar movimiento
         RespawnClientRpc();
+
         isRespawning = false;
     }
 
     [ClientRpc]
     private void PlayDeathClientRpc()
     {
-        //animator.SetTrigger("Death");
-
         if (IsOwner)
         {
             movement.enabled = false;
@@ -87,15 +90,26 @@ public class PlayerDeathHandler : NetworkBehaviour
     [ClientRpc]
     private void RespawnClientRpc()
     {
-        //animator.SetTrigger("Respawn");
-
         if (IsOwner)
         {
+            // 🔥 Reset CharacterController completo
+            CharacterController cc = GetComponent<CharacterController>();
+            if (cc != null)
+            {
+                cc.enabled = false;
+                cc.enabled = true;
+            }
+
+            // Reactivar sistemas
             movement.enabled = true;
             shooter.enabled = true;
+
+            // Limpiar estados previos
+            movement.ResetMovementState();
         }
     }
 }
+
 
 
 
