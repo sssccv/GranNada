@@ -7,14 +7,13 @@ public class PlayerShooter : NetworkBehaviour
     [Header("References")]
     public InputReader inputReader;
     public Transform firePoint;
-    public GameObject[] grenadePrefabs; // aquí agregas tus granadas, minas, etc.
+    public GameObject[] grenadePrefabs;
 
     [Header("Settings")]
     public float shootForce = 10f;          // Fuerza horizontal principal
     public float upwardForce = 5f;          // Fuerza vertical para crear la parábola
     public float fireRate = 0.5f;
 
-    private bool isFiring;
     private float lastFireTime;
 
     private void OnEnable()
@@ -29,55 +28,46 @@ public class PlayerShooter : NetworkBehaviour
 
     private void HandleFire(bool isPressed)
     {
-        isFiring = isPressed;
-    }
-
-    private void Update()
-    {
-        if (!IsOwner) return; // Solo el jugador dueño puede disparar
-
-        if (isFiring && Time.time - lastFireTime > fireRate)
+        // Al soltar el botón, disparamos UNA sola vez
+        if (!isPressed && IsOwner && Time.time - lastFireTime > fireRate)
         {
-            ShootServerRpc(); // Pedimos al servidor que dispare
+            ShootServerRpc(firePoint.position, firePoint.rotation);
             lastFireTime = Time.time;
         }
     }
 
     [ServerRpc]
-    private void ShootServerRpc()
+    public void ShootServerRpc(Vector3 spawnPosition, Quaternion spawnRotation, ServerRpcParams rpcParams = default)
     {
         if (firePoint == null || grenadePrefabs == null || grenadePrefabs.Length == 0)
         {
-            Debug.LogWarning("Faltan referencias o no hay prefabs en PlayerShooter");
+            Debug.LogWarning(" Faltan referencias o no hay prefabs en PlayerShooter");
             return;
         }
 
         // Seleccionar prefab aleatoriamente
         GameObject selectedPrefab = grenadePrefabs[UnityEngine.Random.Range(0, grenadePrefabs.Length)];
 
-        // Instancia la granada o mina
-        GameObject grenade = Instantiate(selectedPrefab, firePoint.position, firePoint.rotation);
+        // Instancia la granada o mina en el servidor
+        GameObject grenade = Instantiate(selectedPrefab, spawnPosition, spawnRotation);
 
         // Spawn en red
         var netObj = grenade.GetComponent<NetworkObject>();
         if (netObj == null)
         {
-            Debug.LogError("❌ Este prefab no tiene NetworkObject: " + selectedPrefab.name);
+            Debug.LogError(" Este prefab no tiene NetworkObject: " + selectedPrefab.name);
             Destroy(grenade);
             return;
         }
         netObj.Spawn();
 
         // ----- INICIALIZAR SEGÚN EL TIPO -----
-
-        // Si es una granada
         var granadeScript = grenade.GetComponent<Granade>();
         if (granadeScript != null)
         {
             granadeScript.Initialize(OwnerClientId);
         }
 
-        // Si es una mina
         var mineScript = grenade.GetComponent<Mine>();
         if (mineScript != null)
         {
@@ -92,6 +82,10 @@ public class PlayerShooter : NetworkBehaviour
             Vector3 upward = Vector3.up * upwardForce;
 
             rb.AddForce(forward + upward, ForceMode.Impulse);
+        }
+        else
+        {
+            Debug.LogWarning(" El prefab " + selectedPrefab.name + " no tiene Rigidbody");
         }
     }
 }
