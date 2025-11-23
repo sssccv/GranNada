@@ -4,15 +4,16 @@ using UnityEngine;
 public class PlayerDeathHandler : NetworkBehaviour
 {
     [SerializeField] private float respawnDelay = 3f;
-    //[SerializeField] private Animator animator;
 
     private PlayerSpawner spawner;
-
     private Health health;
     private PlayerMovement movement;
     private PlayerShooter shooter;
 
     private bool isRespawning = false;
+
+    [HideInInspector] public bool spawnerAssigned = false;
+    [HideInInspector] public Vector3 initialSpawnPosition;
 
     public override void OnNetworkSpawn()
     {
@@ -26,6 +27,7 @@ public class PlayerDeathHandler : NetworkBehaviour
     public void SetSpawner(PlayerSpawner spawner)
     {
         this.spawner = spawner;
+        spawnerAssigned = true;
     }
 
     private void OnDestroy()
@@ -36,7 +38,8 @@ public class PlayerDeathHandler : NetworkBehaviour
 
     private void HandleDeath(Health h)
     {
-        if (!IsServer || isRespawning) return;
+        if (!IsServer || isRespawning || !spawnerAssigned)
+            return;
 
         isRespawning = true;
 
@@ -48,35 +51,22 @@ public class PlayerDeathHandler : NetworkBehaviour
     {
         yield return new WaitForSeconds(respawnDelay);
 
-        if (TeamScoreManager.Instance.IsMatchOver)
+        if (!spawnerAssigned)
             yield break;
 
-        RespawnServerRpc();
-    }
-
-    [ServerRpc]
-    private void RespawnServerRpc()
-    {
-        if (spawner == null)
-        {
-            Debug.LogError("Spawner no asignado");
-            return;
-        }
-
         health.currentHealth.Value = health.maxHealth;
+        health.ResetDeathFlag();
 
-        Vector3 spawnPos = spawner.GetSpawnPoint(OwnerClientId);
-        transform.position = spawnPos;
+        // 🔥 Ahora YA NO movemos al jugador desde el servidor
+        // Solo avisamos y el cliente dueños se teletransporta
+        RespawnClientRpc(initialSpawnPosition);
 
-        RespawnClientRpc();
         isRespawning = false;
     }
 
     [ClientRpc]
     private void PlayDeathClientRpc()
     {
-        //animator.SetTrigger("Death");
-
         if (IsOwner)
         {
             movement.enabled = false;
@@ -85,17 +75,26 @@ public class PlayerDeathHandler : NetworkBehaviour
     }
 
     [ClientRpc]
-    private void RespawnClientRpc()
+    private void RespawnClientRpc(Vector3 respawnPos)
     {
-        //animator.SetTrigger("Respawn");
+        if (!IsOwner) return;
 
-        if (IsOwner)
+        // 🔥 Teleport garantizado para ClientNetworkTransform
+        CharacterController cc = GetComponent<CharacterController>();
+        if (cc != null)
         {
-            movement.enabled = true;
-            shooter.enabled = true;
+            cc.enabled = false;
+            transform.position = respawnPos;
+            cc.enabled = true;
         }
+        else
+        {
+            transform.position = respawnPos;
+        }
+
+        movement.enabled = true;
+        shooter.enabled = true;
+
+        movement.ResetMovementState();
     }
 }
-
-
-

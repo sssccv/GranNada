@@ -11,10 +11,10 @@ public class PlayerMovement : NetworkBehaviour
     private Transform mainCamera;
 
     [Header("Settings")]
-    [SerializeField] public float movementSpeed = 5f;
-    [SerializeField] public float sprintMultiplier = 2f;
-    [SerializeField] private float gravity = -9.81f;
-    [SerializeField] public float jumpHeight = 2f;
+    public float movementSpeed = 5f;
+    public float sprintMultiplier = 2f;
+    private float gravity = -9.81f;
+    public float jumpHeight = 2f;
 
     private Vector3 previousMovementInput;
     private Vector3 verticalVelocity;
@@ -25,7 +25,6 @@ public class PlayerMovement : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
-        // --- INPUT DEL JUGADOR ---
         if (IsOwner)
         {
             inputReader.OnMoveEvent += HandleMovement;
@@ -36,52 +35,83 @@ public class PlayerMovement : NetworkBehaviour
             mainCamera = Camera.main.transform;
         }
 
-        // --- ASIGNAR PLAYERSPAWNER DESDE EL SERVIDOR ---
+        StartCoroutine(AssignSpawnerRoutine());
+    }
+
+    private IEnumerator AssignSpawnerRoutine()
+    {
+        yield return new WaitForSeconds(0.15f);
+
         if (IsServer)
         {
-            StartCoroutine(ServerAssignSpawnerRoutine());
+            AssignSpawnServerSide();
         }
-    }
-
-    private IEnumerator ServerAssignSpawnerRoutine()
-    {
-        yield return null; // aseguramos que la escena ya cargó
-
-        PlayerSpawner spawner = FindFirstObjectByType<PlayerSpawner>();
-
-        if (spawner == null)
+        else
         {
-            Debug.LogError("❌ PlayerSpawner no encontrado en escena.");
-            yield break;
+            RequestSpawnServerRpc();
         }
-
-        // Obtenemos el spawn correcto
-        Vector3 spawnPos = spawner.GetSpawnPoint(OwnerClientId);
-
-        // TELETRANSPORTAR DESDE EL SERVIDOR
-        transform.position = spawnPos;
-
-        // PASAR A CLIENTE SU SPAWNER PARA EL RESPAWN
-        AssignSpawnerClientRpc(OwnerClientId, spawnPos);
     }
 
-    [ClientRpc]
-    private void AssignSpawnerClientRpc(ulong targetClient, Vector3 spawnPosition)
-    {
-        if (NetworkManager.Singleton.LocalClientId != targetClient)
-            return;
+    // =============================================
+    //   HOST ASIGNA EL SPAWN INICIAL
+    // =============================================
 
+    private void AssignSpawnServerSide()
+    {
         PlayerSpawner spawner = FindFirstObjectByType<PlayerSpawner>();
         PlayerDeathHandler death = GetComponent<PlayerDeathHandler>();
 
-        if (death != null && spawner != null)
-        {
-            death.SetSpawner(spawner);
-            transform.position = spawnPosition;
-        }
+        Vector3 spawn = spawner.GetSpawnPoint(OwnerClientId);
+
+        death.SetSpawner(spawner);
+        death.initialSpawnPosition = spawn;
+        death.spawnerAssigned = true;
+
+        // Host puede mover su propio transform
+        transform.position = spawn;
     }
 
-    // --- MOVIMIENTO ---
+    // CLIENTE → pide su spawn al servidor
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+        private void RequestSpawnServerRpc(RpcParams rpcParams = default)
+        {
+            ulong clientId = rpcParams.Receive.SenderClientId;
+    
+            PlayerSpawner spawner = FindFirstObjectByType<PlayerSpawner>();
+            Vector3 spawn = spawner.GetSpawnPoint(clientId);
+    
+            AssignSpawnClientRpc(clientId, spawn);
+        }
+
+    // Servidor lo envía al cliente
+    [ClientRpc]
+    private void AssignSpawnClientRpc(ulong target, Vector3 spawnPos)
+    {
+        if (NetworkManager.Singleton.LocalClientId != target)
+            return;
+
+        var death = GetComponent<PlayerDeathHandler>();
+        PlayerSpawner spawner = FindFirstObjectByType<PlayerSpawner>();
+
+        death.SetSpawner(spawner);
+        death.initialSpawnPosition = spawnPos;
+        death.spawnerAssigned = true;
+
+        // Safe teleport con CharacterController
+        CharacterController cc = GetComponent<CharacterController>();
+        if (cc != null)
+        {
+            cc.enabled = false;
+            transform.position = spawnPos;
+            cc.enabled = true;
+        }
+        else transform.position = spawnPos;
+    }
+
+    // =============================================
+    //   MOVIMIENTO
+    // =============================================
+
     private void HandleMovement(Vector3 movementInput) => previousMovementInput = movementInput;
 
     private void HandleJump()
@@ -95,16 +125,13 @@ public class PlayerMovement : NetworkBehaviour
     private void Update()
     {
         if (!IsOwner) return;
-
         Movement();
     }
 
     private void Movement()
     {
         isGrounded = characterController.isGrounded;
-
-        if (isGrounded && verticalVelocity.y < 0)
-            verticalVelocity.y = -2f;
+        if (isGrounded && verticalVelocity.y < 0) verticalVelocity.y = -2f;
 
         float x = previousMovementInput.x;
         float z = previousMovementInput.z;
@@ -121,11 +148,22 @@ public class PlayerMovement : NetworkBehaviour
             Vector3 moveDirection = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
             float currentSpeed = isSprinting ? movementSpeed * sprintMultiplier : movementSpeed;
 
-            characterController.Move(moveDirection * (currentSpeed * Time.deltaTime));
+            characterController.Move(moveDirection * currentSpeed * Time.deltaTime);
         }
 
         verticalVelocity.y += gravity * Time.deltaTime;
         characterController.Move(verticalVelocity * Time.deltaTime);
     }
-}
 
+    public void ResetMovementState()
+    {
+        previousMovementInput = Vector3.zero;
+        verticalVelocity = Vector3.zero;
+
+        if (characterController != null)
+        {
+            characterController.enabled = false;
+            characterController.enabled = true;
+        }
+    }
+}
