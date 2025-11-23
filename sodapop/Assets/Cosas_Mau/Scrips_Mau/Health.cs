@@ -1,82 +1,73 @@
-using System;
-using System.Runtime.CompilerServices;
 using Unity.Netcode;
 using UnityEngine;
 
 public class Health : NetworkBehaviour
 {
-    [field: SerializeField] public int maxHealth { get; private set; } = 100;
-    public NetworkVariable<int> currentHealth = new NetworkVariable<int>();
-    private bool isDead;
-    public Action<Health> OnDie;
+    [SerializeField] private int _maxHealth = 100;
+    public int maxHealth => _maxHealth;
+
+    public NetworkVariable<int> currentHealth = new NetworkVariable<int>(0);
+    private bool isDead = false;
+
+    public event System.Action<Health> OnDie;
 
     public override void OnNetworkSpawn()
     {
-        if (!IsServer) { return; }
-
+        if (!IsServer) return;
         currentHealth.Value = maxHealth;
     }
 
-    public void TakeDamage(int damageValue, ulong attackerId = ulong.MaxValue)
+    // Server-only damage method (call from ServerRpc or server code)
+    public void TakeDamage(int amount, ulong attackerId = ulong.MaxValue)
     {
         if (!IsServer) return;
+        if (isDead) return;
 
-        ModifyHealth(-damageValue);
+        ModifyHealth(-Mathf.Abs(amount));
 
         if (currentHealth.Value == 0)
         {
-            // Si attackerId es inválido, no asignar puntos
-            if (attackerId != ulong.MaxValue)
+            // award points if attacker valid
+            if (attackerId != ulong.MaxValue && NetworkManager.Singleton.ConnectedClients.ContainsKey(attackerId))
             {
-                Team killerTeam = NetworkManager.Singleton.ConnectedClients[attackerId]
-                    .PlayerObject.GetComponent<TeamComponent>().PlayerTeam.Value;
-
-                TeamScoreManager.Instance.AddScore(killerTeam, 1);
+                var killerObj = NetworkManager.Singleton.ConnectedClients[attackerId].PlayerObject;
+                if (killerObj != null)
+                {
+                    var teamComp = killerObj.GetComponent<TeamComponent>();
+                    if (teamComp != null)
+                    {
+                        Team killerTeam = teamComp.PlayerTeam.Value;
+                        TeamScoreManager.Instance?.AddScore(killerTeam, 1);
+                    }
+                }
             }
         }
     }
 
     public void RestoreHealth(int healValue)
     {
-        ModifyHealth(healValue);
+        if (!IsServer) return;
+        ModifyHealth(Mathf.Abs(healValue));
     }
 
-    private void ModifyHealth(int value)
+    private void ModifyHealth(int delta)
     {
-        if (isDead) { return; }
+        if (isDead) return;
 
-        int newHealth = currentHealth.Value + value;
+        int newHealth = currentHealth.Value + delta;
         currentHealth.Value = Mathf.Clamp(newHealth, 0, maxHealth);
 
         if (currentHealth.Value == 0)
         {
-            OnDie?.Invoke(this);
             isDead = true;
+            OnDie?.Invoke(this);
         }
+    }
+
+    // Called by server on respawn to allow further damage
+    public void ResetDeathFlag()
+    {
+        isDead = false;
     }
 }
 
-
-//Variables y Propiedades
-//•	maxHealth (solo lectura pública, con serialización para el editor): Vida máxima que puede tener este objeto, configurada inicialmente en 100.
-//•	currentHealth (NetworkVariable): Vida actual sincronizada en red, que se replica automáticamente a los clientes.
-//•	isDead: Estado interno booleano para marcar si el objeto ya está “muerto” y evitar efectos múltiples.
-//•	OnDie (Action): Evento público que notifica a otros sistemas cuando este objeto muere.
-
-//Ciclo de Vida en Red método OnNetworkSpawn
-//•	Solo el servidor inicializa currentHealth al máximo cuando el objeto aparece en la red.
-//•	Los clientes reciben esta información automáticamente por la NetworkVariable.
-
-//Modificación de Salud
-//•	TakeDamage(int damageValue)
-//•	Resta vida llamando a ModifyHealth con un valor negativo.
-//•	RestoreHealth(int healValue)
-//•	Cura sumando vida con ModifyHealth.
-
-//Método privado ModifyHealth(int value)
-//•	Si ya está muerto, ignora cualquier cambio.
-//•	Calcula nueva salud sumando el valor recibido (positivo o negativo).
-//•	Usa Mathf.Clamp para asegurarse que la salud permanezca entre 0 y maxHealth.
-//•	Si la salud llega a 0, dispara el evento OnDie y marca isDead para evitar reejecuciones.
-//Resumen
-//Este script es una implementación estándar para gestionar salud en un juego multijugador con Unity Netcode, usando la sincronización automática de NetworkVariables y control autoritario del servidor para mantener coherencia. Está preparado para integrar fácilmente acciones al morir mediante eventos sin acoplar lógica concreta al sistema de salud.//

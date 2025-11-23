@@ -318,7 +318,6 @@ MonoBehaviour:
   characterController: {fileID: 7486404837499988097}
   movementSpeed: 5
   sprintMultiplier: 1.3
-  gravity: -9.81
   jumpHeight: 1
 --- !u!114 &4904747663645930214
 MonoBehaviour:
@@ -357,7 +356,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Health
   ShowTopMostFoldoutHeaderGroup: 1
-  <maxHealth>k__BackingField: 100
+  _maxHealth: 100
   currentHealth:
     m_InternalValue: 0
 --- !u!54 &364546124724540805
@@ -416,6 +415,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerDeathHandler
   ShowTopMostFoldoutHeaderGroup: 1
   respawnDelay: 3
+  spawnerAssigned: 0
+  initialSpawnPosition: {x: 0, y: 0, z: 0}
 --- !u!120 &-7719851983466311613
 LineRenderer:
   serializedVersion: 2
