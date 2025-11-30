@@ -10,22 +10,25 @@ public class ServerButtons : MonoBehaviour
 
     private void Start()
     {
-        // Por defecto ponemos localhost para pruebas rápidas
+        // Por defecto ponemos localhost para pruebas rï¿½pidas
         ipAddressInput.text = "127.0.0.1";
     }
 
     public void HostServer()
     {
-        NetworkManager.Singleton.StartHost();
+    var transporte = NetworkManager.Singleton.GetComponent<UnityTransport>();
+    transporte.ConnectionData.Address = "0.0.0.0"; // Escuchar en todas las interfaces
+    transporte.ConnectionData.Port = 7777;
 
+    NetworkManager.Singleton.StartHost();
     }
     public void JoinServer()
     {
         // 1. Obtenemos el componente de transporte
         var transporte = NetworkManager.Singleton.GetComponent<UnityTransport>();
 
-        // 2. Le decimos a qué IP conectarse (la que escribiste en el InputField)
-        // El puerto por defecto de Netcode es 7777, asegúrate de no haberlo cambiado
+        // 2. Le decimos a quï¿½ IP conectarse (la que escribiste en el InputField)
+        // El puerto por defecto de Netcode es 7777, asegï¿½rate de no haberlo cambiado
         transporte.SetConnectionData(
             ipAddressInput.text,  // La IP del Host (ej: 192.168.1.50)
             7777                  // El puerto (ushort)
