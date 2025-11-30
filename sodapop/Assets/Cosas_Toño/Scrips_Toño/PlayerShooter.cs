@@ -31,11 +31,25 @@ public class PlayerShooter : NetworkBehaviour
         // Al soltar el botón, disparamos UNA sola vez
         if (!isPressed && IsOwner && Time.time - lastFireTime > fireRate)
         {
+            // Intentar usar el método DoThrow() del componente PlayerMovement (usa Trigger en PlayerMovement)
+            var pm = GetComponent<PlayerMovement>();
+            if (pm != null)
+            {
+                pm.DoThrow();
+            }
+            else
+            {
+                // Fallback: reproducir la animación localmente en el dueño
+                PlayThrowLocal();
+            }
+
+            // Enviar al servidor para que haga el spawn y notifique a los demás clientes
             ShootServerRpc(firePoint.position, firePoint.rotation);
             lastFireTime = Time.time;
         }
     }
 
+        
     [ServerRpc]
     public void ShootServerRpc(Vector3 spawnPosition, Quaternion spawnRotation, ServerRpcParams rpcParams = default)
     {
@@ -86,6 +100,15 @@ public class PlayerShooter : NetworkBehaviour
         else
         {
             Debug.LogWarning(" El prefab " + selectedPrefab.name + " no tiene Rigidbody");
+        }
+    }
+
+    private void PlayThrowLocal()
+    {
+        var animator = GetComponent<Animator>();
+        if (animator != null)
+        {
+            animator.SetTrigger("Throw");
         }
     }
 }
