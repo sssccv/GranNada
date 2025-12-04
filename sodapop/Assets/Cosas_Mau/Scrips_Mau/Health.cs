@@ -1,4 +1,6 @@
-using Unity.Netcode;
+using FishNet.Object;
+using FishNet.Object.Synchronizing;
+using FishNet.Connection;
 using UnityEngine;
 
 public class Health : NetworkBehaviour
@@ -6,21 +8,22 @@ public class Health : NetworkBehaviour
     [SerializeField] private int _maxHealth = 100;
     public int maxHealth => _maxHealth;
 
-    public NetworkVariable<int> currentHealth = new NetworkVariable<int>(0);
+    public readonly SyncVar<int> currentHealth = new SyncVar<int>();
     private bool isDead = false;
 
     public event System.Action<Health> OnDie;
 
-    public override void OnNetworkSpawn()
+    public override void OnStartServer()
     {
-        if (!IsServer) return;
+        base.OnStartServer();
+        if (!base.IsServerInitialized) return;
         currentHealth.Value = maxHealth;
     }
 
     // Server-only damage method (call from ServerRpc or server code)
-    public void TakeDamage(int amount, ulong attackerId = ulong.MaxValue)
+    public void TakeDamage(int amount, int attackerId = -1)
     {
-        if (!IsServer) return;
+        if (!base.IsServerInitialized) return;
         if (isDead) return;
 
         ModifyHealth(-Mathf.Abs(amount));
@@ -28,9 +31,9 @@ public class Health : NetworkBehaviour
         if (currentHealth.Value == 0)
         {
             // award points if attacker valid
-            if (attackerId != ulong.MaxValue && NetworkManager.Singleton.ConnectedClients.ContainsKey(attackerId))
+            if (attackerId != -1 && base.NetworkManager.ClientManager.Clients.TryGetValue(attackerId, out NetworkConnection attackerConnection))
             {
-                var killerObj = NetworkManager.Singleton.ConnectedClients[attackerId].PlayerObject;
+                var killerObj = attackerConnection.FirstObject;
                 if (killerObj != null)
                 {
                     var teamComp = killerObj.GetComponent<TeamComponent>();
@@ -46,7 +49,7 @@ public class Health : NetworkBehaviour
 
     public void RestoreHealth(int healValue)
     {
-        if (!IsServer) return;
+        if (!base.IsServerInitialized) return;
         ModifyHealth(Mathf.Abs(healValue));
     }
 

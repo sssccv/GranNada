@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
-using Unity.Netcode;
+using FishNet.Object;
+using FishNet.Object.Synchronizing;
 
 public class GameRulesManager : NetworkBehaviour
 {
@@ -10,29 +11,29 @@ public class GameRulesManager : NetworkBehaviour
     [SerializeField] private List<Transform> spawnPoints = new();
     private int _nextSpawnIdx;
 
-    public NetworkVariable<int> CurrentScore = new(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
-    public NetworkVariable<bool> GameOver = new(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    public readonly SyncVar<int> CurrentScore = new SyncVar<int>();
+    public readonly SyncVar<bool> GameOver = new SyncVar<bool>();
 
     private void Awake()
     {
         Instance = this;
     }
 
-    public override void OnNetworkSpawn()
+    public override void OnStartServer()
     {
-        if (IsServer)
-        {
-            CurrentScore.Value = 0;
-            GameOver.Value = false;
-        }
+        base.OnStartServer();
+        if (!base.IsServerInitialized) return;
+        
+        CurrentScore.Value = 0;
+        GameOver.Value = false;
     }
 
-    public bool CanRespawnServer() => IsServer && !GameOver.Value;
+    public bool CanRespawnServer() => base.IsServerInitialized && !GameOver.Value;
 
-    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    [ServerRpc(RequireOwnership = false)]
     public void AddScoreServerRpc(int amount)
     {
-        if (!IsServer) return;
+        // No need for IsServer check in ServerRpc, but keeping logic safe
         CurrentScore.Value = Mathf.Max(0, CurrentScore.Value + Mathf.Abs(amount));
         if (CurrentScore.Value >= targetScore)
         {
