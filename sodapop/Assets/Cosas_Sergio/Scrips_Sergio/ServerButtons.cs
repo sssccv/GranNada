@@ -1,3 +1,4 @@
+/*
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP; // Necesario
 using UnityEngine;
@@ -43,3 +44,4 @@ public class ServerButtons : MonoBehaviour
         NetworkManager.Singleton.Shutdown();
     }
 }
+*/
