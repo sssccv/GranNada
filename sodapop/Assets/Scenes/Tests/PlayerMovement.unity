@@ -4243,7 +4243,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 494228706}
-  - component: {fileID: 494228704}
   - component: {fileID: 494228705}
   m_Layer: 0
   m_Name: PlayerSpawner
@@ -4252,31 +4251,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &494228704
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 494228703}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 260895440
-  InScenePlacedSourceGlobalObjectIdHash: 0
-  DeferredDespawnTick: 0
-  Ownership: 1
-  AlwaysReplicateAsRoot: 0
-  SynchronizeTransform: 1
-  ActiveSceneSynchronization: 0
-  SceneMigrationSynchronization: 0
-  SpawnWithObservers: 1
-  DontDestroyWithOwner: 0
-  AutoObjectParentSync: 1
-  SyncOwnerTransformWhenParented: 1
-  AllowOwnerToParent: 0
 --- !u!114 &494228705
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4289,7 +4263,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 691dce2623384f7439515ec08dd0f47c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerSpawner
-  ShowTopMostFoldoutHeaderGroup: 1
   teamASpawnPoints:
   - {fileID: 425480558}
   teamBSpawnPoints:
@@ -10208,7 +10181,6 @@ GameObject:
   - component: {fileID: 1141575144}
   - component: {fileID: 1141575143}
   - component: {fileID: 1141575142}
-  - component: {fileID: 1141575140}
   - component: {fileID: 1141575141}
   m_Layer: 5
   m_Name: CanvasTeamScore
@@ -10217,31 +10189,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1141575140
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1141575139}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 2784210623
-  InScenePlacedSourceGlobalObjectIdHash: 0
-  DeferredDespawnTick: 0
-  Ownership: 1
-  AlwaysReplicateAsRoot: 0
-  SynchronizeTransform: 1
-  ActiveSceneSynchronization: 0
-  SceneMigrationSynchronization: 0
-  SpawnWithObservers: 1
-  DontDestroyWithOwner: 0
-  AutoObjectParentSync: 1
-  SyncOwnerTransformWhenParented: 1
-  AllowOwnerToParent: 0
 --- !u!114 &1141575141
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10254,7 +10201,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 54ff3bc5d08167a4087c8bd4a794e747, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TeamScoreUI
-  ShowTopMostFoldoutHeaderGroup: 1
   teamAText: {fileID: 1439733950}
   teamBText: {fileID: 1198174856}
 --- !u!114 &1141575142
@@ -10868,6 +10814,7 @@ GameObject:
   - component: {fileID: 1172696496}
   - component: {fileID: 1172696494}
   - component: {fileID: 1172696495}
+  - component: {fileID: 1172696497}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -10887,6 +10834,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 19f4eba60833ef04dbc3573ab421d9b8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
+  _componentIndexCache: 255
+  _addedNetworkObject: {fileID: 1172696497}
+  _networkObjectCache: {fileID: 0}
+  targetScore: 10
+  spawnPoints: []
 --- !u!114 &1172696495
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10899,13 +10851,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0ffe7ace599cee24da259a38c5cc2c74, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TeamScoreManager
-  ShowTopMostFoldoutHeaderGroup: 1
-  TeamAScore:
-    m_InternalValue: 0
-  TeamBScore:
-    m_InternalValue: 0
+  _componentIndexCache: 255
+  _addedNetworkObject: {fileID: 1172696497}
+  _networkObjectCache: {fileID: 0}
   scoreToWin: 10
-  IsMatchOver: 0
 --- !u!4 &1172696496
 Transform:
   m_ObjectHideFlags: 0
@@ -10921,6 +10870,59 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1172696497
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1172696493}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 26b716c41e9b56b4baafaf13a523ba2e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FishNet.Runtime::FishNet.Object.NetworkObject
+  <IsNested>k__BackingField: 0
+  WasActiveDuringEdit: 1
+  WasActiveDuringEdit_Set1: 1
+  <ComponentIndex>k__BackingField: 0
+  <PredictedSpawn>k__BackingField: {fileID: 0}
+  <PredictedOwner>k__BackingField: {fileID: 0}
+  NetworkBehaviours: []
+  InitializedParentNetworkBehaviour: {fileID: 0}
+  InitializedNestedNetworkObjects: []
+  RuntimeParentNetworkBehaviour: {fileID: 0}
+  RuntimeChildNetworkBehaviours: []
+  _isNetworked: 1
+  _isSpawnable: 1
+  _isGlobal: 0
+  _initializeOrder: 0
+  _preventDespawnOnDisconnect: 0
+  _defaultDespawnType: 0
+  _initializedTimestamp: 0
+  NetworkObserver: {fileID: 0}
+  _enablePrediction: 0
+  _predictionType: 0
+  _graphicalObject: {fileID: 0}
+  _detachGraphicalObject: 0
+  _enableStateForwarding: 1
+  _networkTransform: {fileID: 0}
+  _ownerInterpolation: 1
+  _ownerSmoothedProperties: 255
+  _adaptiveInterpolation: 3
+  _spectatorSmoothedProperties: 255
+  _spectatorInterpolation: 2
+  _enableTeleport: 0
+  _teleportThreshold: 1
+  <PrefabId>k__BackingField: 65535
+  <SpawnableCollectionId>k__BackingField: 0
+  <AssetPathHash>k__BackingField: 0
+  SceneId: 4024233846
+  SerializedTransformProperties:
+    Position: {x: 0, y: 0, z: 0}
+    Rotation: {x: 0, y: 0, z: 0, w: 0}
+    Scale: {x: 0, y: 0, z: 0}
+    IsValid: 0
 --- !u!1001 &1181556452
 PrefabInstance:
   m_ObjectHideFlags: 0

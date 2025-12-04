@@ -92,6 +92,8 @@ GameObject:
   - component: {fileID: -7719851983466311613}
   - component: {fileID: 829241586719593070}
   - component: {fileID: 6939235053118773240}
+  - component: {fileID: 4062471945358569199}
+  - component: {fileID: 6258425323878087841}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -460,6 +462,51 @@ MonoBehaviour:
     X: 0
     Y: 0
     Z: 0
+--- !u!114 &4062471945358569199
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2098883754890550089}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 58d231d07e5a2a4429318e7ee430b373, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GrenadePreview
+  firePoint: {fileID: 7471081090950341724}
+  shooter: {fileID: 6258425323878087841}
+  inputReader: {fileID: 11400000, guid: 3f92bb43283f74b4bbacbd5565948546, type: 2}
+  impactMarkerPrefab: {fileID: 3724457974037577499, guid: b8cf050ba1460bb41b2fa4c7a65bd38d, type: 3}
+  resolution: 30
+  timeStep: 0.1
+  previewColor: {r: 1, g: 0, b: 0, a: 1}
+--- !u!114 &6258425323878087841
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2098883754890550089}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6624b45fdf747f840b8ef1ed5e7856af, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerShooter
+  _componentIndexCache: 255
+  _addedNetworkObject: {fileID: 829241586719593070}
+  _networkObjectCache: {fileID: 0}
+  inputReader: {fileID: 11400000, guid: 3f92bb43283f74b4bbacbd5565948546, type: 2}
+  firePoint: {fileID: 7471081090950341724}
+  grenadePrefabs:
+  - {fileID: 6371802206121391458, guid: 8f0adec86988d904b8d781b39b5300e2, type: 3}
+  - {fileID: 6371802206121391458, guid: 11919633b62ff5243a8e0bd225a9d701, type: 3}
+  - {fileID: 6371802206121391458, guid: 818003cb45e1573418c614b6ceb0cb3d, type: 3}
+  - {fileID: 6371802206121391458, guid: 59edb992647436e478c455f054cb20a7, type: 3}
+  - {fileID: 6371802206121391458, guid: 64a6df2b53f6f8543baeb9f8732a4be8, type: 3}
+  shootForce: 10
+  upwardForce: 5
+  fireRate: 0.5
 --- !u!1 &4316901408669348098
 GameObject:
   m_ObjectHideFlags: 0
