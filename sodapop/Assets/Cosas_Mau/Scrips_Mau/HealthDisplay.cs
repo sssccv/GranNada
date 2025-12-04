@@ -1,4 +1,4 @@
-using Unity.Netcode;
+using FishNet.Object;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -8,25 +8,31 @@ public class HealthDisplay : NetworkBehaviour
     [SerializeField] private Health health;
     [SerializeField] private Image healthImageUI;
 
-    public override void OnNetworkSpawn()
+    public override void OnStartClient()
     {
-        if (!IsClient) { return; }
+        base.OnStartClient();
+        if (!base.IsClientInitialized) { return; }
 
-        health.currentHealth.OnValueChanged += HandleHealthChanged;
-        HandleHealthChanged(0, health.currentHealth.Value);
+        health.currentHealth.OnChange += HandleHealthChanged;
+        UpdateHealthUI(health.currentHealth.Value);
     }
 
-    public override void OnNetworkDespawn()
+    public override void OnStopClient()
     {
-        if (!IsClient) { return; }
+        base.OnStopClient();
+        if (!base.IsClientInitialized) { return; }
 
-        health.currentHealth.OnValueChanged -= HandleHealthChanged;
+        health.currentHealth.OnChange -= HandleHealthChanged;
     }
 
-    private void HandleHealthChanged(int oldHealth, int newHealth)
-
+    private void HandleHealthChanged(int oldHealth, int newHealth, bool asServer)
     {
-        healthImageUI.fillAmount = (float)newHealth / health.maxHealth;
+        UpdateHealthUI(newHealth);
+    }
+
+    private void UpdateHealthUI(int currentHealth)
+    {
+        healthImageUI.fillAmount = (float)currentHealth / health.maxHealth;
     }
 }
 

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
-using Unity.Netcode;
+using FishNet.Object;
+using FishNet.Object.Synchronizing;
 
 public class GameScoreManager : NetworkBehaviour
 {
@@ -10,7 +11,7 @@ public class GameScoreManager : NetworkBehaviour
     [SerializeField] private List<Transform> spawnPoints = new List<Transform>();
 
     public int TargetScore => targetScore;
-    public NetworkVariable<int> CurrentScore = new NetworkVariable<int>(0);
+    public readonly SyncVar<int> CurrentScore = new SyncVar<int>();
     private int _nextSpawnIndex;
 
     private void Awake()
@@ -21,10 +22,10 @@ public class GameScoreManager : NetworkBehaviour
     public bool CanRespawnServer()
     {
         // Solo el servidor decide si se puede respawnear.
-        return CurrentScore.Value < targetScore;
+        return base.IsServerInitialized && CurrentScore.Value < targetScore;
     }
 
-    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+    [ServerRpc(RequireOwnership = false)]
     public void AddScoreServerRpc(int amount)
     {
         CurrentScore.Value = Mathf.Max(0, CurrentScore.Value + amount);

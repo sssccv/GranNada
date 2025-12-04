@@ -1,6 +1,6 @@
 using System;
 using UnityEngine;
-using Unity.Netcode;
+using FishNet.Object;
 
 public class PlayerShooter : NetworkBehaviour
 {
@@ -29,7 +29,7 @@ public class PlayerShooter : NetworkBehaviour
     private void HandleFire(bool isPressed)
     {
         // Al soltar el botón, disparamos UNA sola vez
-        if (!isPressed && IsOwner && Time.time - lastFireTime > fireRate)
+        if (!isPressed && base.IsOwner && Time.time - lastFireTime > fireRate)
         {
             // Intentar usar el método DoThrow() del componente PlayerMovement (usa Trigger en PlayerMovement)
             var pm = GetComponent<PlayerMovement>();
@@ -51,7 +51,7 @@ public class PlayerShooter : NetworkBehaviour
 
         
     [ServerRpc]
-    public void ShootServerRpc(Vector3 spawnPosition, Quaternion spawnRotation, ServerRpcParams rpcParams = default)
+    public void ShootServerRpc(Vector3 spawnPosition, Quaternion spawnRotation)
     {
         if (firePoint == null || grenadePrefabs == null || grenadePrefabs.Length == 0)
         {
@@ -73,19 +73,20 @@ public class PlayerShooter : NetworkBehaviour
             Destroy(grenade);
             return;
         }
-        netObj.Spawn();
+        base.Spawn(grenade);
 
         // ----- INICIALIZAR SEGÚN EL TIPO -----
         var granadeScript = grenade.GetComponent<Granade>();
         if (granadeScript != null)
         {
-            granadeScript.Initialize(OwnerClientId);
+            // FishNet usa int para OwnerId. Casteamos a ulong por compatibilidad con scripts antiguos si es necesario.
+            granadeScript.Initialize((ulong)base.OwnerId);
         }
 
         var mineScript = grenade.GetComponent<Mine>();
         if (mineScript != null)
         {
-            mineScript.Initialize(OwnerClientId);
+            mineScript.Initialize((ulong)base.OwnerId);
         }
 
         // ----- APLICAR FÍSICA -----
