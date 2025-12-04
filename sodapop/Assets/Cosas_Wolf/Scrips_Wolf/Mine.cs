@@ -1,6 +1,6 @@
 using System.Collections;
-using Unity.Netcode;
 using UnityEngine;
+using FishNet.Object;
 
 public class Mine : NetworkBehaviour
 {
@@ -18,17 +18,15 @@ public class Mine : NetworkBehaviour
         attackerId = attacker;
     }
 
-    private void Start()
+    public override void OnStartServer()
     {
-        if (IsServer)
-        {
-            StartCoroutine(DestroyAfterLifetime());
-        }
+        base.OnStartServer();
+        StartCoroutine(DestroyAfterLifetime());
     }
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (!IsServer) return;
+        if (!IsServerInitialized) return;
 
         if (!isArmed)
         {
@@ -43,7 +41,7 @@ public class Mine : NetworkBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (!IsServer || !isArmed) return;
+        if (!IsServerInitialized || !isArmed) return;
 
         if (other.GetComponent<PlayerMovement>() != null || other.GetComponent<Health>() != null)
         {
@@ -53,10 +51,10 @@ public class Mine : NetworkBehaviour
 
     private void Explode()
     {
-        //  Efecto visual sincronizado en todos los clientes con posición enviada
-        ExplodeClientRpc(transform.position);
+        // Efecto visual sincronizado en todos los clientes
+        ExplodeObserversRpc(transform.position);
 
-        //  Zona de daño en red (solo servidor)
+        // Zona de daño en red (solo servidor)
         if (damageZonePrefab != null)
         {
             GameObject zone = Instantiate(damageZonePrefab, transform.position, Quaternion.identity);
@@ -65,15 +63,15 @@ public class Mine : NetworkBehaviour
             if (dmg != null)
                 dmg.Initialize(attackerId);
 
-            zone.GetComponent<NetworkObject>().Spawn();
+            ServerManager.Spawn(zone);
         }
 
-        //  Despawn en red
-        GetComponent<NetworkObject>().Despawn();
+        // Despawn en red
+        ServerManager.Despawn(gameObject);
     }
 
-    [ClientRpc]
-    private void ExplodeClientRpc(Vector3 explosionPosition)
+    [ObserversRpc]
+    private void ExplodeObserversRpc(Vector3 explosionPosition)
     {
         // Este código se ejecuta en todos los clientes con la posición correcta
         if (explosionEffect != null)
@@ -86,7 +84,7 @@ public class Mine : NetworkBehaviour
     {
         yield return new WaitForSeconds(lifetime);
 
-        if (GetComponent<NetworkObject>() != null)
-            GetComponent<NetworkObject>().Despawn();
+        if (IsServerInitialized)
+            ServerManager.Despawn(gameObject);
     }
 }

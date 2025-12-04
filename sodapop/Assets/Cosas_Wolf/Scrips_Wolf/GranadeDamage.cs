@@ -1,7 +1,7 @@
-using Unity.Netcode;
 using UnityEngine;
-using System.Collections.Generic;
 using System.Collections;
+using System.Collections.Generic;
+using FishNet.Object;
 
 public class GranadeDamage : NetworkBehaviour
 {
@@ -10,7 +10,6 @@ public class GranadeDamage : NetworkBehaviour
     [SerializeField] private float lifetime = 3f;
 
     private ulong attackerId = ulong.MaxValue;
-
     private HashSet<Health> objectsInside = new HashSet<Health>();
 
     public void Initialize(ulong attacker)
@@ -18,15 +17,15 @@ public class GranadeDamage : NetworkBehaviour
         attackerId = attacker;
     }
 
-    public override void OnNetworkSpawn()
+    public override void OnStartServer()
     {
-        if (!IsServer) return;
+        base.OnStartServer();
         StartCoroutine(DestroyAfterLifetime());
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (!IsServer) return;
+        if (!IsServerInitialized) return;
 
         Health health = other.GetComponent<Health>();
         if (health != null && !objectsInside.Contains(health))
@@ -38,7 +37,7 @@ public class GranadeDamage : NetworkBehaviour
 
     private void OnTriggerExit(Collider other)
     {
-        if (!IsServer) return;
+        if (!IsServerInitialized) return;
 
         Health health = other.GetComponent<Health>();
         if (health != null)
@@ -51,7 +50,7 @@ public class GranadeDamage : NetworkBehaviour
     {
         while (objectsInside.Contains(health))
         {
-            health.TakeDamage(damagePerTick, attackerId);
+            health.TakeDamage(damagePerTick, (int)attackerId);
             yield return new WaitForSeconds(tickInterval);
         }
     }
@@ -59,9 +58,14 @@ public class GranadeDamage : NetworkBehaviour
     private IEnumerator DestroyAfterLifetime()
     {
         yield return new WaitForSeconds(lifetime);
-        GetComponent<NetworkObject>().Despawn();
+
+        if (IsServerInitialized)
+        {
+            ServerManager.Despawn(gameObject);
+        }
     }
 }
+
 
 
 /*public class GranadeDamage : NetworkBehaviour

@@ -13,7 +13,7 @@ public class TeamComponent : NetworkBehaviour
 {
     // CORRECCIÓN CLAVE: Usamos la clase SyncVar<Team>
     // Ya no necesitas el atributo [SyncVar] ni el parámetro Group.
-    public SyncVar<Team> PlayerTeam = new SyncVar<Team>(); 
+    public readonly SyncVar<Team> PlayerTeam = new SyncVar<Team>();
 
     // Utilizamos OnStartServer para la lógica que solo debe ejecutarse en el servidor.
     public override void OnStartServer()

@@ -13,8 +13,8 @@ public class TeamScoreManager : NetworkBehaviour
 
     // CAMBIO CLAVE: NetworkVariable<int> se reemplaza por SyncVar<int>
     // Usamos el constructor sin parámetros.
-    public SyncVar<int> TeamAScore = new SyncVar<int>();
-    public SyncVar<int> TeamBScore = new SyncVar<int>();
+    public readonly SyncVar<int> TeamAScore = new SyncVar<int>();
+    public readonly SyncVar<int> TeamBScore = new SyncVar<int>();
 
     [SerializeField] private int scoreToWin = 50;
 
@@ -25,8 +25,7 @@ public class TeamScoreManager : NetworkBehaviour
     // pero si quieres que los clientes sepan si el partido terminó,
     // conviértela en una SyncVar. Si no, solo el servidor la usa para su lógica.
     // La convertiré en SyncVar para que los clientes puedan reaccionar al fin del partido.
-    public SyncVar<bool> IsMatchOver = new SyncVar<bool>(false); 
-
+    public readonly SyncVar<bool> IsMatchOver = new SyncVar<bool>(false);
 
     private void Awake()
     {

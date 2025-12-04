@@ -1,7 +1,7 @@
-using Unity.Netcode;
 using UnityEngine;
-using System.Collections.Generic;
 using System.Collections;
+using System.Collections.Generic;
+using FishNet.Object;
 
 public class GranadeStun : NetworkBehaviour
 {
@@ -11,44 +11,62 @@ public class GranadeStun : NetworkBehaviour
     [SerializeField] private float stunDuration = 2f;       // cuánto dura el efecto en el jugador
     [SerializeField] private float lifetime = 3f;           // tiempo que dura la zona en escena
 
+    // Jugadores dentro de la zona
     private HashSet<PlayerMovement> playersInside = new HashSet<PlayerMovement>();
 
-    public override void OnNetworkSpawn()
+    // Diccionario para guardar valores originales de cada jugador
+    private Dictionary<PlayerMovement, (float speed, float sprint, float jump)> originalValues
+        = new Dictionary<PlayerMovement, (float, float, float)>();
+
+    public override void OnStartServer()
     {
-        if (!IsServer) return;
+        base.OnStartServer();
         StartCoroutine(DestroyAfterLifetime());
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (!IsServer) return;
+        if (!IsServerInitialized) return;
 
         PlayerMovement player = other.GetComponent<PlayerMovement>();
         if (player != null && !playersInside.Contains(player))
         {
             playersInside.Add(player);
+
+            // Guardamos valores originales
+            if (!originalValues.ContainsKey(player))
+            {
+                originalValues[player] = (player.movementSpeed, player.sprintMultiplier, player.jumpHeight);
+            }
+
             StartCoroutine(ApplyStun(player));
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
-        if (!IsServer) return;
+        if (!IsServerInitialized) return;
 
         PlayerMovement player = other.GetComponent<PlayerMovement>();
         if (player != null && playersInside.Contains(player))
         {
             playersInside.Remove(player);
+
+            // Restauramos valores originales al salir
+            if (originalValues.ContainsKey(player))
+            {
+                var values = originalValues[player];
+                player.movementSpeed = values.speed;
+                player.sprintMultiplier = values.sprint;
+                player.jumpHeight = values.jump;
+
+                originalValues.Remove(player);
+            }
         }
     }
 
     private IEnumerator ApplyStun(PlayerMovement player)
     {
-        // Guardamos valores originales
-        float originalSpeed = player.movementSpeed;
-        float originalSprint = player.sprintMultiplier;
-        float originalJump = player.jumpHeight;
-
         // Aplicamos el efecto
         player.movementSpeed *= slowMultiplier;
         player.sprintMultiplier = 1f; // desactiva sprint
@@ -58,24 +76,39 @@ public class GranadeStun : NetworkBehaviour
         yield return new WaitForSeconds(stunDuration);
 
         // Restauramos valores originales
-        player.movementSpeed = originalSpeed;
-        player.sprintMultiplier = originalSprint;
-        player.jumpHeight = originalJump;
+        if (originalValues.ContainsKey(player))
+        {
+            var values = originalValues[player];
+            player.movementSpeed = values.speed;
+            player.sprintMultiplier = values.sprint;
+            player.jumpHeight = values.jump;
+
+            originalValues.Remove(player);
+        }
+
+        playersInside.Remove(player);
     }
 
     private IEnumerator DestroyAfterLifetime()
     {
         yield return new WaitForSeconds(lifetime);
 
-        // Al destruir la zona, quitamos el efecto a todos los jugadores dentro
+        // Al destruir la zona, restauramos valores originales de todos los jugadores dentro
         foreach (var player in playersInside)
         {
-            // Restauramos valores originales por seguridad
-            player.movementSpeed = 10f; // valor por defecto
-            player.sprintMultiplier = 2f;
-            player.jumpHeight = 2f;
+            if (originalValues.ContainsKey(player))
+            {
+                var values = originalValues[player];
+                player.movementSpeed = values.speed;
+                player.sprintMultiplier = values.sprint;
+                player.jumpHeight = values.jump;
+            }
         }
 
-        GetComponent<NetworkObject>().Despawn();
+        playersInside.Clear();
+        originalValues.Clear();
+
+        if (IsServerInitialized)
+            ServerManager.Despawn(gameObject);
     }
 }
